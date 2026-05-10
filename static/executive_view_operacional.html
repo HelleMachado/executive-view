@@ -22,6 +22,61 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:10px;bord
 .notice{background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.35);color:#fed7aa;border-radius:14px;padding:13px;font-size:13px}.code{background:#070a0f;border:1px solid var(--line);border-radius:14px;padding:14px;color:#d1d5db;font-family:Consolas,monospace;font-size:12px;white-space:pre-wrap}
 canvas{max-height:390px}.chart-tall{height:500px;max-height:500px!important}@media(max-width:1200px){.grid-2,.grid-4,.grid-5,.form-grid,.filters{grid-template-columns:1fr}}
 </style>
+
+<script>
+(function(){
+  const SYNC_KEYS = ["cc4_dados","cc4_importacoes","cc4_pagamentos","cc4_unidades","cc4_operadoras"];
+  function getLocalState(){
+    const data = {};
+    SYNC_KEYS.forEach(function(k){
+      try { data[k] = localStorage.getItem(k) || "[]"; }
+      catch(e){ data[k] = "[]"; }
+    });
+    return data;
+  }
+  function applyState(payload){
+    if(!payload || !payload.data) return;
+    Object.keys(payload.data).forEach(function(k){
+      if(SYNC_KEYS.indexOf(k) >= 0 && payload.data[k] !== null && payload.data[k] !== undefined){
+        localStorage.setItem(k, payload.data[k]);
+      }
+    });
+    if(payload.version !== undefined){
+      localStorage.setItem("cc4_server_version", String(payload.version));
+    }
+  }
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", "/api/state", false);
+    xhr.send(null);
+    if(xhr.status === 200){ applyState(JSON.parse(xhr.responseText)); }
+  } catch(e) { console.warn("Falha ao carregar dados centrais:", e); }
+
+  let saveTimer = null;
+  const originalSetItem = localStorage.setItem.bind(localStorage);
+  localStorage.setItem = function(key, value){
+    originalSetItem(key, value);
+    if(SYNC_KEYS.indexOf(key) >= 0){
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(function(){
+        fetch("/api/state", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({data: getLocalState()})
+        })
+        .then(r => r.json())
+        .then(payload => {
+          if(payload && payload.version !== undefined){
+            originalSetItem("cc4_server_version", String(payload.version));
+          }
+        })
+        .catch(err => console.warn("Falha ao salvar dados centrais:", err));
+      }, 500);
+    }
+  };
+})();
+</script>
+
 </head>
 <body>
 <header><div class="brand"><div class="logo">CC</div><div><h1>Executive View | Dashboard Operacional</h1></div></div><div style="min-width:260px"><label>Perfil de acesso</label><select id="perfilUsuario"><option>Diretor</option><option>Financeiro</option><option>Coordenação</option><option>Operacional</option><option>Auditoria</option></select></div></header>
