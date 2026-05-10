@@ -1,14 +1,2 @@
-CONFIGURAÇÃO NO RENDER
-
-Build Command:
-pip install -r requirements.txt
-
-Start Command:
-gunicorn app:app
-
-Acesso:
-https://SEU-SITE.onrender.com/executive_view_operacional
-
-IMPORTANTE:
-Os arquivos app.py, requirements.txt, Procfile e a pasta static precisam estar na RAIZ do repositório GitHub.
-Não coloque esses arquivos dentro de uma subpasta, a menos que você configure Root Directory no Render.
+Flask==3.0.3
+gunicorn==22.0.0
