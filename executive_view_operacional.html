@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Executive View | Dashboard Operacional</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{--card:#151922;--line:#30384a;--text:#f9fafb;--muted:#9ca3af;--orange:#f97316;--green:#22c55e;--red:#ef4444;--yellow:#facc15;--blue:#38bdf8;--purple:#a78bfa}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top left,#2a1c12 0,#111827 35%,#070a0f 100%);color:var(--text)}
+header{padding:24px 30px;background:linear-gradient(135deg,#151922,#0f1117,#3a1d08);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
+h1{margin:0;font-size:25px}p{color:var(--muted)}.brand{display:flex;gap:16px;align-items:center}.logo{width:54px;height:54px;display:grid;place-items:center;border:1px solid rgba(249,115,22,.55);border-radius:16px;color:var(--orange);font-weight:900;background:#151922}
+.wrap{max-width:1800px;margin:auto;padding:20px}.tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}.tab-btn{border:1px solid var(--line);background:#1d2330;color:#fff;border-radius:14px;padding:12px 15px;font-weight:800;cursor:pointer}.tab-btn.active{background:linear-gradient(180deg,var(--orange),#c2410c)}
+.tab{display:none}.tab.active{display:block}.grid{display:grid;gap:16px}.grid-2{grid-template-columns:repeat(2,1fr)}.grid-5{grid-template-columns:repeat(5,1fr)}.grid-4{grid-template-columns:repeat(4,1fr)}
+.card,.kpi{background:linear-gradient(180deg,var(--card),#111520);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 18px 38px rgba(0,0,0,.35)}.card h2,.card h3{margin:0 0 14px}
+.kpi span{display:block;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase}.kpi strong{display:block;margin-top:10px;font-size:24px}.kpi small{display:block;margin-top:8px;color:var(--muted)}
+.orange strong{color:var(--orange)}.green strong{color:var(--green)}.red strong{color:var(--red)}.yellow strong{color:var(--yellow)}.blue strong{color:var(--blue)}.purple strong{color:var(--purple)}
+label{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;font-weight:900;margin-bottom:7px}input,select{width:100%;background:#0c0f15;color:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 12px}
+.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.filters{display:grid;grid-template-columns:repeat(7,1fr);gap:12px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.btn{border:0;border-radius:12px;color:#fff;padding:10px 14px;font-weight:900;cursor:pointer;background:#30384a}.btn-primary{background:linear-gradient(180deg,var(--orange),#c2410c)}.btn-green{background:linear-gradient(180deg,#22c55e,#15803d)}.btn-blue{background:linear-gradient(180deg,#38bdf8,#0369a1)}.btn-red{background:linear-gradient(180deg,#ef4444,#991b1b)}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#222a38;color:#fff;position:sticky;top:0;z-index:1;white-space:nowrap}.table-wrap{max-height:540px;overflow:auto;border:1px solid var(--line);border-radius:14px}
+.badge{display:inline-block;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900}.b-green{background:rgba(34,197,94,.16);color:#86efac}.b-red{background:rgba(239,68,68,.16);color:#fca5a5}.b-yellow{background:rgba(250,204,21,.16);color:#fde68a}.b-blue{background:rgba(56,189,248,.16);color:#7dd3fc}.b-gray{background:#30384a;color:#d1d5db}
+.notice{background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.35);color:#fed7aa;border-radius:14px;padding:13px;font-size:13px}.code{background:#070a0f;border:1px solid var(--line);border-radius:14px;padding:14px;color:#d1d5db;font-family:Consolas,monospace;font-size:12px;white-space:pre-wrap}
+canvas{max-height:390px}.chart-tall{height:500px;max-height:500px!important}@media(max-width:1200px){.grid-2,.grid-4,.grid-5,.form-grid,.filters{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="logo">CC</div><div><h1>Executive View | Dashboard Operacional</h1></div></div><div style="min-width:260px"><label>Perfil de acesso</label><select id="perfilUsuario"><option>Diretor</option><option>Financeiro</option><option>Coordenação</option><option>Operacional</option><option>Auditoria</option></select></div></header>
+<div class="wrap">
+<div class="tabs">
+<button class="tab-btn active" data-tab="executive">Executive View</button>
+<button class="tab-btn" data-tab="importacao">Importação CSV</button>
+<button class="tab-btn" data-tab="payment">Payment follow-up</button>
+<button class="tab-btn" data-tab="prazos">Prazos e SLA</button>
+<button class="tab-btn" data-tab="cadastro">Cadastro</button>
+<button class="tab-btn" data-tab="multiunidades">Multiunidades</button>
+<button class="tab-btn" data-tab="sqlAuditoria">SQL Auditoria</button>
+<button class="tab-btn" data-tab="base">Base Analítica</button>
+</div>
+
+<section id="executive" class="tab active">
+<div class="card"><h2>Filtros Gerenciais</h2><div class="filters">
+<div><label>Operadora</label><select id="fOperadora"><option value="">Todas</option></select></div><div><label>Unidade</label><select id="fUnidade"><option value="">Todas</option></select></div><div><label>Especialidade</label><select id="fEspecialidade"><option value="">Todas</option></select></div><div><label>Competência</label><select id="fCompetencia"><option value="">Todas</option></select></div><div><label>Referência</label><select id="fReferencia"><option value="">Todas</option></select></div><div><label>Tipo</label><select id="fTipo"><option value="">Todos</option><option value="faturamento">Faturamento</option><option value="recurso">Recurso</option></select></div><div><label>Recurso</label><select id="fStatusRecurso"><option value="">Todos</option></select></div>
+</div><div class="actions"><button class="btn" id="btnLimparFiltros">Limpar filtros</button><button class="btn btn-green" id="btnExportar">Exportar análise CSV</button></div></div>
+<div class="grid grid-5" style="margin-top:16px"><div class="kpi orange"><span>Faturamento apresentado</span><strong id="kFat">R$ 0,00</strong></div><div class="kpi green"><span>Valor Liberado</span><strong id="kLiberado">R$ 0,00</strong><small>Faturamento apresentado - Valor Glosado</small></div><div class="kpi red"><span>Valor Glosado</span><strong id="kGlosa">R$ 0,00</strong></div><div class="kpi blue"><span>Valor Recuperado</span><strong id="kRec">R$ 0,00</strong></div><div class="kpi yellow"><span>Glosa Líquida</span><strong id="kGlosaLiq">R$ 0,00</strong></div></div>
+<div class="grid grid-5" style="margin-top:16px"><div class="kpi"><span>Nº atendimentos</span><strong id="kAtend">0</strong></div><div class="kpi"><span>Índice de glosa</span><strong id="kIndGlosa">0%</strong></div><div class="kpi"><span>Taxa recuperação</span><strong id="kTaxaRec">0%</strong></div><div class="kpi purple"><span>Em análise</span><strong id="kEmAnalise">0</strong></div><div class="kpi red"><span>Requer ação</span><strong id="kRequerAcao">0</strong></div></div>
+<div class="grid grid-2" style="margin-top:16px"><div class="card"><h3>Análise por Especialidade — Resumo Executivo</h3><div class="table-wrap"><table id="tblEspResumoExec"></table></div></div><div class="card"><h3>Faturamento por Convênio</h3><canvas id="chartFatConvenio"></canvas></div><div class="card"><h3>Evolução Mensal do Faturamento</h3><canvas id="chartEvolucaoMensal"></canvas></div><div class="card"><h3>Glosa x Recuperação por Especialidade</h3><canvas id="chartGlosaRecEsp" class="chart-tall"></canvas></div><div class="card"><h3>Faturamento por Especialidade</h3><canvas id="chartFatEsp" class="chart-tall"></canvas></div><div class="card"><h3>Faturamento por dia de atendimento</h3><canvas id="chartFatDia"></canvas></div><div class="card"><h3>Glosa por especialidade</h3><canvas id="chartGlosaEspecialidadeHorizontal" class="chart-tall"></canvas></div></div>
+</section>
+
+<section id="importacao" class="tab">
+<div class="grid grid-2">
+<div class="card"><h2>Importação — Arquivo de Faturamento e Glosa</h2><div class="form-grid" style="grid-template-columns:1fr 1fr"><div><label>Operadora</label><select id="fatOperadora"></select></div><div><label>Competência faturamento</label><input id="fatCompetencia" type="month"></div><div><label>Unidade</label><select id="fatUnidade"></select></div><div><label>Referência do Faturamento</label><input id="fatReferencia" type="month"></div><div><label>Arquivo CSV</label><input type="file" accept=".csv" id="csvFaturamento"></div></div><div class="actions"><button class="btn btn-primary" id="btnImportarFat">Importar faturamento</button><button class="btn btn-blue" id="btnModeloFat">Modelo CSV Faturamento</button></div><div class="notice" id="statusFat" style="margin-top:14px">Após a importação, os dados ficam armazenados. Apenas Diretor pode excluir importações.</div></div>
+<div class="card"><h2>Extrato de Recurso de Glosa</h2><div class="form-grid" style="grid-template-columns:1fr 1fr"><div><label>Operadora</label><select id="recImpOperadora"></select></div><div><label>Competência faturamento</label><input id="recImpCompetencia" type="month"></div><div><label>Unidade</label><select id="recImpUnidade"></select></div><div><label>Referência do Faturamento</label><input id="recImpReferencia" type="month"></div><div><label>Arquivo CSV</label><input type="file" accept=".csv" id="csvRecurso"></div></div><div class="actions"><button class="btn btn-primary" id="btnImportarRec">Importar recurso</button><button class="btn btn-green" id="btnModeloRec">Modelo CSV Recurso</button></div><div class="notice" id="statusRec" style="margin-top:14px">Importe o extrato para análise de recuperação.</div></div>
+</div><div class="card" style="margin-top:16px"><h2>Histórico de Importações</h2><div class="table-wrap"><table id="tblImportacoes"></table></div></div>
+</section>
+
+<section id="payment" class="tab">
+  <div class="grid grid-2">
+    <div class="card">
+      <h2>Payment follow-up</h2>
+      <p>Histórico automático dos faturamentos cadastrados. A data de pagamento é editável com digitação completa do ano.</p>
+      <div class="table-wrap"><table id="tblPayment"></table></div>
+    </div>
+    <div class="card"><h2>Registro Manual de Recurso de Glosa</h2><div class="form-grid"><div><label>Operadora</label><select id="recOperadora"></select></div><div><label>Unidade</label><select id="recUnidade"></select></div><div><label>Referência origem</label><input id="recReferencia" type="month"></div><div><label>Especialidade</label><select id="recEspecialidade"></select></div><div><label>Valor glosado origem</label><input id="recGlosado" placeholder="R$ 0,00"></div><div><label>Valor recursado</label><input id="recRecursado" placeholder="R$ 0,00"></div><div><label>Valor pago recurso</label><input id="recPago" placeholder="R$ 0,00"></div><div><label>Data abertura recurso</label><input id="recDataAbertura" type="date"></div><div><label>Data pagamento recurso</label><input id="recDataPagamento" type="date"></div><div><label>Data 1ª análise</label><input id="recDataAnalise1" type="date"></div><div><label>Data 2ª análise</label><input id="recDataAnalise2" type="date"></div><div><label>Data 3ª análise</label><input id="recDataAnalise3" type="date"></div><div><label>Situação recurso</label><select id="recStatus"><option>Em Análise</option><option>Requer Ação</option><option>Encerrado (Enviado para Pagamento)</option></select></div></div><div class="actions"><button class="btn btn-primary" id="btnSalvarRec">Salvar recurso</button></div></div>
+  </div>
+</section>
+<section id="prazos" class="tab"><div class="grid grid-5"><div class="kpi orange"><span>Média repasse faturamento</span><strong id="kDiasRepasse">0 dias</strong></div><div class="kpi blue"><span>Média envio recurso</span><strong id="kDiasEnvioRec">0 dias</strong></div><div class="kpi purple"><span>Média 1ª análise</span><strong id="kDiasA1">0 dias</strong></div><div class="kpi yellow"><span>Média 2ª análise</span><strong id="kDiasA2">0 dias</strong></div><div class="kpi green"><span>Média 3ª análise</span><strong id="kDiasA3">0 dias</strong></div></div><div class="grid grid-2" style="margin-top:16px"><div class="card"><h3>Comparativo de períodos — Repasse de faturamento</h3><canvas id="chartPrazoRepasse"></canvas></div><div class="card"><h3>Comparativo de períodos — Recurso de glosa</h3><canvas id="chartPrazoRecurso"></canvas></div></div><div class="card" style="margin-top:16px"><h2>Prazos Calculados por Operadora</h2><div class="table-wrap"><table id="tblPrazos"></table></div></div></section>
+<section id="cadastro" class="tab"><div class="grid grid-2"><div class="card"><h2>Cadastro de Unidade</h2><div class="form-grid" style="grid-template-columns:1fr 1fr"><div><label>Unidade</label><input id="unNome"></div><div><label>CNPJ</label><input id="unCnpj"></div><div><label>Cidade</label><input id="unCidade"></div><div><label>UF</label><input id="unUf"></div></div><div class="actions"><button class="btn btn-primary" id="btnAddUnidade">Adicionar unidade</button></div></div><div class="card"><h2>Cadastro de Operadora</h2><div class="form-grid" style="grid-template-columns:1fr 1fr"><div><label>Operadora</label><input id="opNome"></div><div><label>COD Prestador</label><input id="opCodigo"></div><div><label>Prazo Repasse Faturamento</label><input id="opPrazoFat" type="number"></div><div><label>Unidade Vinculada</label><select id="opUnidade"></select></div></div><div class="actions"><button class="btn btn-primary" id="btnAddOperadora">Adicionar operadora</button></div></div></div><div class="grid grid-2" style="margin-top:16px"><div class="card"><h3>Unidades</h3><div class="table-wrap"><table id="tblUnidades"></table></div></div><div class="card"><h3>Operadoras</h3><div class="table-wrap"><table id="tblOperadoras"></table></div></div></div></section>
+
+
+<section id="multiunidades" class="tab">
+  <div class="grid grid-4">
+    <div class="kpi orange"><span>Unidades</span><strong id="muQtdUnidades">0</strong><small>Unidades cadastradas</small></div>
+    <div class="kpi green"><span>Controle</span><strong>Por CNPJ</strong><small>Vínculo financeiro e operacional</small></div>
+    <div class="kpi blue"><span>Permissão</span><strong>Por unidade</strong><small>Acesso segmentado por perfil</small></div>
+    <div class="kpi yellow"><span>Indicadores</span><strong>Comparáveis</strong><small>Performance por filial</small></div>
+  </div>
+
+  <div class="grid grid-2" style="margin-top:16px">
+    <div class="card">
+      <h2>Comparativo por Unidade</h2>
+      <canvas id="chartMultiUnidades"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>Visão multiunidade</h2>
+      <div class="table-wrap"><table id="tblMultiUnidades"></table></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>Critérios operacionais por unidade</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Critério</th>
+            <th>Aplicação no dashboard</th>
+            <th>Objetivo gerencial</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Unidade vinculada</td><td>Todos os registros importados e lançamentos manuais devem conter unidade.</td><td>Permitir análise individual e consolidada.</td></tr>
+          <tr><td>CNPJ</td><td>Cada unidade pode ter CNPJ próprio para conferência financeira.</td><td>Separar faturamento e repasses por filial.</td></tr>
+          <tr><td>Operadora por unidade</td><td>Operadoras podem ser vinculadas a uma unidade específica ou a todas.</td><td>Controlar regras de repasse e SLA por filial.</td></tr>
+          <tr><td>Acesso por perfil</td><td>Diretoria vê todas; áreas operacionais podem ser restringidas por unidade.</td><td>Garantir segurança e governança.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+
+<section id="sqlAuditoria" class="tab">
+  <div class="grid grid-5">
+    <div class="kpi orange"><span>Auditoria SQL</span><strong>Logs</strong><small>Acessos, alterações e exclusões</small></div>
+    <div class="kpi blue"><span>Rastreabilidade</span><strong>Antes / Depois</strong><small>Valor anterior e novo valor</small></div>
+    <div class="kpi green"><span>Segurança</span><strong>Usuário</strong><small>Perfil, unidade e e-mail</small></div>
+    <div class="kpi yellow"><span>Banco</span><strong>SQL Nuvem</strong><small>Histórico centralizado</small></div>
+    <div class="kpi purple"><span>Compliance</span><strong>Auditável</strong><small>Consulta por período e módulo</small></div>
+  </div>
+
+  <div class="grid grid-2" style="margin-top:16px">
+    <div class="card">
+      <h2>SQL Auditoria — Campos auditáveis</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Campo</th><th>Finalidade</th><th>Aplicação</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>usuario_email</td><td>Identificar quem realizou a ação</td><td>Login, edição, importação e exclusão</td></tr>
+            <tr><td>perfil</td><td>Registrar nível de acesso</td><td>Diretoria, Financeiro, Coordenação, Operacional, Auditoria</td></tr>
+            <tr><td>unidade_id</td><td>Vincular alteração à unidade</td><td>Multiunidades e permissões</td></tr>
+            <tr><td>modulo</td><td>Identificar a área impactada</td><td>Executive View, Importação CSV, Payment follow-up, Cadastro</td></tr>
+            <tr><td>acao</td><td>Tipo de operação</td><td>Inclusão, alteração, exclusão, importação, exportação</td></tr>
+            <tr><td>tabela_afetada</td><td>Origem do dado alterado</td><td>faturamento, recursos_glosa, operadoras, unidades</td></tr>
+            <tr><td>registro_id</td><td>ID do registro impactado</td><td>Localização do item alterado</td></tr>
+            <tr><td>campo_alterado</td><td>Campo específico alterado</td><td>Data pagamento, valor recuperado, status recurso</td></tr>
+            <tr><td>valor_anterior</td><td>Informação antes da alteração</td><td>Auditoria antes/depois</td></tr>
+            <tr><td>valor_novo</td><td>Informação após a alteração</td><td>Auditoria antes/depois</td></tr>
+            <tr><td>ip_dispositivo</td><td>Origem do acesso quando disponível</td><td>Segurança e rastreabilidade</td></tr>
+            <tr><td>observacao</td><td>Justificativa ou referência</td><td>Complemento da auditoria</td></tr>
+            <tr><td>criado_em</td><td>Data/hora do evento</td><td>Linha do tempo auditável</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Eventos auditáveis obrigatórios</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Módulo</th><th>Ação auditável</th><th>Criticidade</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Login</td><td>Acesso, falha de login, bloqueio de usuário inativo e redefinição de senha</td><td><span class="badge b-yellow">Média</span></td></tr>
+            <tr><td>Importação CSV</td><td>Importação, exclusão de arquivo e reprocessamento</td><td><span class="badge b-red">Alta</span></td></tr>
+            <tr><td>Payment follow-up</td><td>Alteração da data de pagamento do faturamento</td><td><span class="badge b-red">Alta</span></td></tr>
+            <tr><td>Recurso de Glosa</td><td>Inclusão, alteração de status, valor recursado e valor recuperado</td><td><span class="badge b-red">Alta</span></td></tr>
+            <tr><td>Cadastro</td><td>Inclusão/exclusão de operadora e unidade</td><td><span class="badge b-red">Alta</span></td></tr>
+            <tr><td>Relatórios</td><td>Exportação de bases gerenciais</td><td><span class="badge b-yellow">Média</span></td></tr>
+            <tr><td>Permissões</td><td>Alteração de perfil, unidade vinculada ou status do usuário</td><td><span class="badge b-red">Alta</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>Trilha auditável operacional</h2>
+    <div class="table-wrap">
+      <table id="tblAuditoriaOperacional">
+        <thead>
+          <tr>
+            <th>Data/Hora</th>
+            <th>Usuário/Perfil</th>
+            <th>Módulo</th>
+            <th>Ação</th>
+            <th>Campo</th>
+            <th>Valor anterior</th>
+            <th>Novo valor</th>
+            <th>Observação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="8">Os registros serão alimentados pelo banco SQL em ambiente de produção.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="base" class="tab"><div class="card"><h2>Base Analítica</h2><p>A visão executiva não exibe nomes de pacientes; a base mantém informações operacionais para conferência.</p><div class="table-wrap"><table id="tblBase"></table></div></div></section>
+</div>
+
+<script>
+(function(){
+const ESPECIALIDADES=['Psicologia','Fonoaudiologia','Terapia Ocupacional','Fisioterapia','Psicomotricidade','Musicoterapia','Psicopedagogia','Avaliação Neuropsicológica'];
+let dados=[],importacoes=[],pagamentos=[],unidades=[{id:1,nome:'Casa Cuidar I',cnpj:'',cidade:'',uf:''},{id:2,nome:'Casa Cuidar II',cnpj:'',cidade:'',uf:''}],operadoras=[{id:1,nome:'Amil',codigo:'',prazoFat:30,unidade:'Todas'},{id:2,nome:'Porto Seguro',codigo:'',prazoFat:30,unidade:'Todas'},{id:3,nome:'Particular',codigo:'',prazoFat:0,unidade:'Todas'}],charts={};
+function $(id){return document.getElementById(id)}function load(){try{dados=JSON.parse(localStorage.getItem('cc4_dados')||'[]')}catch(e){}try{importacoes=JSON.parse(localStorage.getItem('cc4_importacoes')||'[]')}catch(e){}try{pagamentos=JSON.parse(localStorage.getItem('cc4_pagamentos')||'[]')}catch(e){}try{unidades=JSON.parse(localStorage.getItem('cc4_unidades')||JSON.stringify(unidades))}catch(e){}try{operadoras=JSON.parse(localStorage.getItem('cc4_operadoras')||JSON.stringify(operadoras))}catch(e){}}
+function save(){localStorage.setItem('cc4_dados',JSON.stringify(dados));localStorage.setItem('cc4_importacoes',JSON.stringify(importacoes));localStorage.setItem('cc4_pagamentos',JSON.stringify(pagamentos));localStorage.setItem('cc4_unidades',JSON.stringify(unidades));localStorage.setItem('cc4_operadoras',JSON.stringify(operadoras))}
+function isDiretor(){return $('perfilUsuario').value==='Diretor'}function norm(s){return(s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim()}function money(v){return(Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}function pct(v){return(isFinite(v)?v:0).toFixed(1)+'%'}function br(v){if(v==null||v==='')return 0;let s=String(v).replace(/R\$/g,'').replace(/\s/g,'').trim();if(s.includes(',')&&s.includes('.'))s=s.replace(/\./g,'').replace(',', '.');else if(s.includes(','))s=s.replace(',', '.');let n=parseFloat(s.replace(/[^0-9.-]/g,''));return isNaN(n)?0:n}
+function dateISO(v){if(!v)return'';let s=String(v).trim(),m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);if(m)return`${m[3]}-${m[2]}-${m[1]}`;m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return`${m[1]}-${m[2]}-${m[3]}`;return''}function parseDateAny(v){if(!v)return'';let s=String(v).trim();let m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);if(m)return`${m[3]}-${m[2]}-${m[1]}`;m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)return s;return dateISO(s)}
+function formatDateBR(v){let iso=parseDateAny(v);if(!iso)return'';let m=iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}/${m[2]}/${m[1]}`:v}
+function days(a,b){a=parseDateAny(a);b=parseDateAny(b);if(!a||!b)return 0;let d1=new Date(a+'T00:00:00'),d2=new Date(b+'T00:00:00'),diff=Math.floor((d2-d1)/(1000*60*60*24));return isNaN(diff)?0:Math.max(0,diff)}function avg(a){return a.length?a.reduce((x,y)=>x+y,0)/a.length:0}
+function col(o,names){let keys=Object.keys(o||{});for(let name of names){let f=keys.find(k=>norm(k)===norm(name)||norm(k).includes(norm(name)));if(f)return o[f]}return''}function espec(s){let n=norm(s);for(let e of ESPECIALIDADES){if(n.includes(norm(e)))return e}return'Outras'}
+function parseCSV(text){let first=text.split(/\r?\n/).find(l=>l.trim())||'',delimiter=(first.match(/;/g)||[]).length>=(first.match(/,/g)||[]).length?';':',';let rows=[],row=[],cur='',inside=false;for(let i=0;i<text.length;i++){let c=text[i],n=text[i+1];if(c=='"'&&inside&&n=='"'){cur+='"';i++}else if(c=='"'){inside=!inside}else if(c===delimiter&&!inside){row.push(cur);cur=''}else if((c==='\n'||c==='\r')&&!inside){if(c==='\r'&&n==='\n')i++;row.push(cur);cur='';if(row.some(x=>String(x).trim()!==''))rows.push(row);row=[]}else cur+=c}row.push(cur);if(row.some(x=>String(x).trim()!==''))rows.push(row);let headers=(rows.shift()||[]).map(h=>h.trim());return rows.map(r=>{let o={};headers.forEach((h,i)=>o[h]=r[i]||'');return o})}
+function table(id,headers,rows){let el=$(id);if(!el)return;el.innerHTML='<thead><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+(rows.length?rows.map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="'+headers.length+'">Sem dados.</td></tr>')+'</tbody>'}
+function badge(s,t){return'<span class="badge '+t+'">'+s+'</span>'}function statusBadge(s){let n=norm(s);if(n.includes('requer'))return badge('Requer Ação','b-red');if(n.includes('encerrado'))return badge('Encerrado / Pagamento','b-green');return badge(s||'Em Análise','b-yellow')}
+function chart(id,type,labels,datasets,indexAxis='x'){let el=$(id);if(!el||typeof Chart==='undefined')return;if(charts[id])charts[id].destroy();Chart.defaults.color='#d1d5db';Chart.defaults.borderColor='#30384a';charts[id]=new Chart(el,{type,data:{labels,datasets},options:{indexAxis,responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#f9fafb'}}},scales:(type==='doughnut'||type==='pie')?{}:{x:{ticks:{color:'#d1d5db'},grid:{color:'#30384a'}},y:{beginAtZero:true,ticks:{color:'#d1d5db'},grid:{color:'#30384a'}}}}})}
+function group(arr,key){let o={};arr.forEach(x=>{let k=key(x)||'Não informado';if(!o[k])o[k]={fat:0,gl:0,lib:0,rec:0,recursado:0,atend:0,ana:0,req:0,diasEnvRec:[],a1:[],a2:[],a3:[]};o[k].fat+=x.valorInformado;o[k].gl+=x.valorGlosa;o[k].lib+=Math.max(0,x.valorInformado-x.valorGlosa);o[k].rec+=x.valorPagoRecurso;o[k].recursado+=x.valorRecursado;if(x.tipo==='faturamento')o[k].atend++;if(x.statusRecurso==='Requer Ação')o[k].req++;if(x.statusRecurso==='Em Análise')o[k].ana++;if(x.dataAtendimento&&x.dataAberturaRecurso)o[k].diasEnvRec.push(days(x.dataAtendimento,x.dataAberturaRecurso));if(x.dataAberturaRecurso&&x.dataAnalise1)o[k].a1.push(days(x.dataAberturaRecurso,x.dataAnalise1));if(x.dataAnalise1&&x.dataAnalise2)o[k].a2.push(days(x.dataAnalise1,x.dataAnalise2));if(x.dataAnalise2&&x.dataAnalise3)o[k].a3.push(days(x.dataAnalise2,x.dataAnalise3))});return o}
+function faturamentoOnly(arr){return arr.filter(x=>x.tipo==='faturamento')}
+function recursoOnly(arr){return arr.filter(x=>x.tipo==='recurso'||x.valorRecursado>0||x.valorPagoRecurso>0)}
+function groupMix(arr,key){let o={};arr.forEach(x=>{let k=key(x)||'Não informado';if(!o[k])o[k]={fat:0,gl:0,lib:0,rec:0,recursado:0,atend:0};if(x.tipo==='faturamento'){o[k].fat+=x.valorInformado;o[k].gl+=x.valorGlosa;o[k].lib+=Math.max(0,x.valorInformado-x.valorGlosa);o[k].atend++;} if(x.tipo==='recurso'||x.valorPagoRecurso>0||x.valorRecursado>0){o[k].rec+=x.valorPagoRecurso;o[k].recursado+=x.valorRecursado;}});return o}
+
+function filtered(){let op=$('fOperadora').value,un=$('fUnidade').value,esp=$('fEspecialidade').value,comp=$('fCompetencia').value,ref=$('fReferencia').value,t=$('fTipo').value,sr=$('fStatusRecurso').value;return dados.filter(x=>(!op||x.operadora===op)&&(!un||x.unidade===un)&&(!esp||x.especialidade===esp)&&(!comp||x.competencia===comp)&&(!ref||x.referencia===ref)&&(!t||x.tipo===t)&&(!sr||x.statusRecurso===sr))}
+function metrics(arr){let fat=arr.reduce((s,x)=>s+x.valorInformado,0),gl=arr.reduce((s,x)=>s+x.valorGlosa,0),rec=arr.reduce((s,x)=>s+x.valorPagoRecurso,0),lib=Math.max(0,fat-gl);return{fat,gl,rec,lib,liq:gl-rec,atend:arr.filter(x=>x.tipo==='faturamento').length,ind:fat?gl/fat*100:0,taxa:gl?rec/gl*100:0,ana:arr.filter(x=>x.statusRecurso==='Em Análise').length,req:arr.filter(x=>x.statusRecurso==='Requer Ação').length}}
+function renderKpis(){let m=metrics(filtered());$('kFat').textContent=money(m.fat);$('kLiberado').textContent=money(m.lib);$('kGlosa').textContent=money(m.gl);$('kRec').textContent=money(m.rec);$('kGlosaLiq').textContent=money(m.liq);$('kAtend').textContent=m.atend;$('kIndGlosa').textContent=pct(m.ind);$('kTaxaRec').textContent=pct(m.taxa);$('kEmAnalise').textContent=m.ana;$('kRequerAcao').textContent=m.req}
+function renderCharts(){let a=filtered(),gOp=group(a,x=>x.operadora),ops=Object.keys(gOp).sort((a,b)=>gOp[b].fat-gOp[a].fat),gMes=group(a,x=>x.competencia),meses=Object.keys(gMes).sort(),gEsp=group(a,x=>x.especialidade),espFat=Object.keys(gEsp).sort((a,b)=>gEsp[b].fat-gEsp[a].fat).slice(0,12).reverse(),espGl=Object.keys(gEsp).sort((a,b)=>gEsp[b].gl-gEsp[a].gl).slice(0,12).reverse(),gDia=group(a.filter(x=>x.tipo==='faturamento'),x=>x.dataAtendimento),dias=Object.keys(gDia).sort().slice(-31);chart('chartFatConvenio','bar',ops,[{label:'Faturamento',data:ops.map(o=>gOp[o].fat),backgroundColor:'#f97316'}]);chart('chartEvolucaoMensal','line',meses,[{label:'Faturamento',data:meses.map(m=>gMes[m].fat),borderColor:'#f97316',backgroundColor:'rgba(249,115,22,.16)',tension:.35}]);chart('chartGlosaRecEsp','bar',espGl,[{label:'Glosa',data:espGl.map(e=>gEsp[e].gl),backgroundColor:'#ef4444'},{label:'Recuperação',data:espGl.map(e=>gEsp[e].rec),backgroundColor:'#22c55e'}],'y');chart('chartFatEsp','bar',espFat,[{label:'Faturamento por especialidade',data:espFat.map(e=>gEsp[e].fat),backgroundColor:'#f97316'}],'y');chart('chartFatDia','line',dias,[{label:'Faturamento por dia',data:dias.map(d=>gDia[d].fat),borderColor:'#38bdf8',backgroundColor:'rgba(56,189,248,.16)',tension:.35}]);chart('chartGlosaEspecialidadeHorizontal','bar',espGl,[{label:'Glosa por especialidade',data:espGl.map(e=>gEsp[e].gl),backgroundColor:'#ef4444'}],'y');let pr=payPrazo();chart('chartPrazoRepasse','bar',pr.labels,[{label:'Média dias repasse',data:pr.values,backgroundColor:'#f97316'}]);let rr=recPrazo();chart('chartPrazoRecurso','bar',rr.labels,[{label:'Média dias envio recurso',data:rr.values,backgroundColor:'#38bdf8'}])}
+function payPrazo(){let m={};pagamentos.forEach(p=>{if(p.dataPagamento&&p.dataEnvioLote){if(!m[p.competencia])m[p.competencia]=[];m[p.competencia].push(days(p.dataEnvioLote,p.dataPagamento))}});let labels=Object.keys(m).sort();return{labels,values:labels.map(l=>avg(m[l]))}}function recPrazo(){let m={};dados.forEach(x=>{if(x.dataAtendimento&&x.dataAberturaRecurso){if(!m[x.competencia])m[x.competencia]=[];m[x.competencia].push(days(x.dataAtendimento,x.dataAberturaRecurso))}});let labels=Object.keys(m).sort();return{labels,values:labels.map(l=>avg(m[l]))}}
+function renderTables(){let a=filtered(),fatA=faturamentoOnly(a),recA=recursoOnly(a),gEsp=groupMix(a,x=>x.especialidade),recMetrics=metrics(a);let recGl=recA.reduce((s,x)=>s+x.valorGlosa,0),recRecursado=recA.reduce((s,x)=>s+x.valorRecursado,0),recPago=recA.reduce((s,x)=>s+x.valorPagoRecurso,0);if($('recOnlyGlosa')){$('recOnlyGlosa').textContent=money(recGl);$('recOnlyRecursado').textContent=money(recRecursado);$('recOnlyPago').textContent=money(recPago);$('recOnlyTaxa').textContent=pct(recGl?recPago/recGl*100:0)}table('tblEspResumoExec',['Especialidade','Número de Atendimentos por especialidade','Faturamento por especialidade'],Object.entries(gEsp).sort((a,b)=>b[1].fat-a[1].fat).map(([k,v])=>[k,v.atend,money(v.fat)]));table('tblBase',['Tipo','Operadora','Unidade','Competência','Referência','Beneficiário','Data atendimento','Especialidade','Valor informado','Valor glosado','Valor liberado','Valor recursado','Valor pago recurso','Status recurso','Envio lote','Pagamento faturamento','Abertura recurso','Pagamento recurso'],a.map(x=>[x.tipo,x.operadora,x.unidade,x.competencia,x.referencia,x.beneficiario||'',x.dataAtendimento||'',x.especialidade,money(x.valorInformado),money(x.valorGlosa),money(Math.max(0,x.valorInformado-x.valorGlosa)),money(x.valorRecursado),money(x.valorPagoRecurso),statusBadge(x.statusRecurso),x.dataEnvioLote||'',x.dataPagamentoFaturamento||'',x.dataAberturaRecurso||'',x.dataPagamentoRecurso||'']));table('tblRecursos',['Operadora','Referência','Beneficiário','Data atendimento','Especialidade','Glosado origem','Valor recursado','Valor pago recurso','Status','Abertura recurso','Pagamento recurso','Dias envio recurso','1ª análise','2ª análise','3ª análise'],a.filter(x=>x.tipo==='recurso'||x.valorRecursado>0||x.valorPagoRecurso>0).map(x=>[x.operadora,x.referencia,x.beneficiario||'',x.dataAtendimento||'',x.especialidade,money(x.valorGlosa),money(x.valorRecursado),money(x.valorPagoRecurso),statusBadge(x.statusRecurso),x.dataAberturaRecurso||'',x.dataPagamentoRecurso||'',x.dataAtendimento&&x.dataAberturaRecurso?days(x.dataAtendimento,x.dataAberturaRecurso)+' dias':'',x.dataAberturaRecurso&&x.dataAnalise1?days(x.dataAberturaRecurso,x.dataAnalise1)+' dias':'',x.dataAnalise1&&x.dataAnalise2?days(x.dataAnalise1,x.dataAnalise2)+' dias':'',x.dataAnalise2&&x.dataAnalise3?days(x.dataAnalise2,x.dataAnalise3)+' dias':'']));table('tblImportacoes',['Data','Tipo','Operadora','Competência','Referência','Unidade','Arquivo','Linhas','Ação'],importacoes.map(x=>[x.data,x.tipo,x.operadora,x.competencia,x.referencia,x.unidade,x.arquivo,x.linhas,isDiretor()?`<button class="btn btn-red" data-del-imp="${x.id}">Excluir</button>`:'<span class="badge b-gray">Somente Diretor</span>']));table('tblPayment',['Operadora','Competência faturamento','Unidade','Referência do Faturamento','Data de pagamento do faturamento','Valor Apresentado','Valor Glosado','Valor Liberado'],pagamentos.map(p=>[p.operadora,p.competencia,p.unidade,p.referencia,`<input type="text" placeholder="dd/mm/aaaa" value="${formatDateBR(p.dataPagamento||'')}" data-pay-date="${p.id}">`,money(p.valorApresentado),money(p.valorGlosado),money(Math.max(0,p.valorApresentado-p.valorGlosado))]));table('tblUnidades',['Unidade','CNPJ','Cidade','UF','Ação'],unidades.map(x=>[x.nome,x.cnpj||'',x.cidade||'',x.uf||'',isDiretor()?`<button class="btn btn-red" data-del-un="${x.id}">Excluir</button>`:'<span class="badge b-gray">Somente Diretor</span>']));table('tblOperadoras',['Operadora','COD Prestador','Prazo Repasse Faturamento','Unidade Vinculada','Ação'],operadoras.map(x=>[x.nome,x.codigo||'',(x.prazoFat||0)+' dias',x.unidade||'Todas',isDiretor()?`<button class="btn btn-red" data-del-op="${x.id}">Excluir</button>`:'<span class="badge b-gray">Somente Diretor</span>']));let gOp=group(a,x=>x.operadora),prazoRows=Object.entries(gOp).map(([k,v])=>[k,mediaRep(k).toFixed(1)+' dias',avg(v.diasEnvRec).toFixed(1)+' dias',avg(v.a1).toFixed(1)+' dias',avg(v.a2).toFixed(1)+' dias',avg(v.a3).toFixed(1)+' dias']);table('tblPrazos',['Operadora','SLA por Operadora','Média repasse faturamento','Média envio recurso','Devolutiva 1ª análise','Devolutiva 2ª análise','Devolutiva 3ª análise','Status SLA'],prazoRows.map(r=>{let op=operadoras.find(o=>o.nome===r[0])||{};let prazo=Number(op.prazoFat||0);let media=parseFloat(r[1])||0;let status=(prazo&&media>prazo)?'<span class="badge b-red">Fora do SLA</span>':'<span class="badge b-green">Dentro do SLA</span>';return [r[0],(prazo||'-')+' dias',r[1],r[2],r[3],r[4],r[5],status]}));let rep=pagamentos.filter(p=>p.dataPagamento&&p.dataEnvioLote).map(p=>days(p.dataEnvioLote,p.dataPagamento));$('kDiasRepasse').textContent=avg(rep).toFixed(1)+' dias';let all=group(a,x=>'all').all||{diasEnvRec:[],a1:[],a2:[],a3:[]};$('kDiasEnvioRec').textContent=avg(all.diasEnvRec).toFixed(1)+' dias';$('kDiasA1').textContent=avg(all.a1).toFixed(1)+' dias';$('kDiasA2').textContent=avg(all.a2).toFixed(1)+' dias';$('kDiasA3').textContent=avg(all.a3).toFixed(1)+' dias'}
+function mediaRep(op){return avg(pagamentos.filter(p=>p.operadora===op&&p.dataPagamento&&p.dataEnvioLote).map(p=>days(p.dataEnvioLote,p.dataPagamento)))}
+function fill(id,items,first){let el=$(id);if(!el)return;let old=el.value;el.innerHTML='<option value="">'+first+'</option>'+items.map(x=>'<option value="'+x+'">'+x+'</option>').join('');if(items.includes(old))el.value=old}
+function fills(){let ops=[...new Set([...operadoras.map(x=>x.nome),...dados.map(x=>x.operadora)].filter(Boolean))].sort(),uns=[...new Set([...unidades.map(x=>x.nome),...dados.map(x=>x.unidade)].filter(Boolean))].sort(),esp=[...new Set([...ESPECIALIDADES,...dados.map(x=>x.especialidade)].filter(Boolean))].sort(),comps=[...new Set(dados.map(x=>x.competencia).filter(Boolean))].sort(),refs=[...new Set(dados.map(x=>x.referencia).filter(Boolean))].sort(),sr=[...new Set(dados.map(x=>x.statusRecurso).filter(Boolean))].sort();['fatOperadora','recImpOperadora','recOperadora','fOperadora'].forEach(id=>fill(id,ops,id==='fOperadora'?'Todas':'Selecione'));['fatUnidade','recImpUnidade','recUnidade','fUnidade','opUnidade'].forEach(id=>fill(id,uns,id==='fUnidade'?'Todas':'Selecione'));fill('fEspecialidade',esp,'Todas');fill('recEspecialidade',esp,'Selecione');fill('fCompetencia',comps,'Todas');fill('fReferencia',refs,'Todas');fill('fStatusRecurso',sr,'Todos')}
+
+function renderMultiUnidades(){
+  const elQtd = document.getElementById('muQtdUnidades');
+  if(elQtd) elQtd.textContent = unidades.length || 0;
+
+  const grupos = {};
+  dados.forEach(x=>{
+    const u = x.unidade || 'Não informada';
+    if(!grupos[u]) grupos[u] = {fat:0, gl:0, rec:0, atend:0};
+    if(x.tipo === 'faturamento'){
+      grupos[u].fat += x.valorInformado || 0;
+      grupos[u].gl += x.valorGlosa || 0;
+      grupos[u].atend += 1;
+    }
+    if(x.tipo === 'recurso' || x.valorPagoRecurso > 0){
+      grupos[u].rec += x.valorPagoRecurso || 0;
+    }
+  });
+
+  const labels = Object.keys(grupos);
+  table('tblMultiUnidades',
+    ['Unidade','Nº Atendimentos','Faturamento','Glosa','Recuperação','Receita Líquida','Status'],
+    labels.map(u=>{
+      const v=grupos[u], receita=v.fat-v.gl+v.rec;
+      const status = v.gl > (v.fat*0.1) ? '<span class="badge b-red">Atenção</span>' : '<span class="badge b-green">Regular</span>';
+      return [u, v.atend, money(v.fat), money(v.gl), money(v.rec), money(receita), status];
+    })
+  );
+
+  const canvas = document.getElementById('chartMultiUnidades');
+  if(canvas && typeof Chart !== 'undefined'){
+    if(charts['chartMultiUnidades']) charts['chartMultiUnidades'].destroy();
+    charts['chartMultiUnidades'] = new Chart(canvas,{
+      type:'bar',
+      data:{
+        labels: labels.length ? labels : ['Sem dados'],
+        datasets:[
+          {label:'Faturamento',data:labels.length?labels.map(u=>grupos[u].fat):[0],backgroundColor:'#f97316'},
+          {label:'Glosa',data:labels.length?labels.map(u=>grupos[u].gl):[0],backgroundColor:'#ef4444'},
+          {label:'Recuperação',data:labels.length?labels.map(u=>grupos[u].rec):[0],backgroundColor:'#22c55e'}
+        ]
+      },
+      options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true}}}
+    });
+  }
+}
+
+function render(){fills();renderKpis();renderCharts();renderTables();renderMultiUnidades();save()}
+function importFaturamento(){let file=$('csvFaturamento').files[0];if(!file)return alert('Anexe o CSV de faturamento.');let op=$('fatOperadora').value||'Não informado',un=$('fatUnidade').value||'Não informada',comp=$('fatCompetencia').value,ref=$('fatReferencia').value||comp,unObj=unidades.find(x=>x.nome===un)||{};if(!comp)return alert('Informe a competência.');let reader=new FileReader();reader.onload=e=>{let rows=parseCSV(e.target.result),impId=Date.now(),mapped=rows.map(r=>{let gl=br(col(r,['VALOR DA GLOSA','valor da glosa'])),fat=br(col(r,['VALOR INFORMADO']));return{importId:impId,tipo:'faturamento',operadora:op,unidade:un,cnpj:unObj.cnpj||'',competencia:comp,referencia:ref,dataEnvioLote:dateISO(col(r,['DATA ENVIO LOTE'])),beneficiario:col(r,['BENEFICIÁRIO','BENEFICIARIO']),dataAtendimento:dateISO(col(r,['DATA REALIZAÇÃO','DATA REALIZACAO'])),especialidade:espec(col(r,['DESCRIÇÃO','DESCRICAO'])),valorInformado:fat,valorGlosa:gl,valorPagoRecurso:0,valorRecursado:0,statusRecurso:gl>0?'Em Análise':'',dataPagamentoFaturamento:'',dataAberturaRecurso:'',dataPagamentoRecurso:'',dataAnalise1:'',dataAnalise2:'',dataAnalise3:''}});dados=dados.concat(mapped);let totalFat=mapped.reduce((s,x)=>s+x.valorInformado,0),totalGl=mapped.reduce((s,x)=>s+x.valorGlosa,0),env=mapped.find(x=>x.dataEnvioLote)?.dataEnvioLote||'';pagamentos.push({id:impId,importId:impId,operadora:op,competencia:comp,referencia:ref,unidade:un,dataEnvioLote:env,dataPagamento:'',valorApresentado:totalFat,valorGlosado:totalGl});importacoes.unshift({id:impId,data:new Date().toLocaleString('pt-BR'),tipo:'Faturamento e Glosa',operadora:op,competencia:comp,referencia:ref,unidade:un,arquivo:file.name,linhas:mapped.length});$('statusFat').innerHTML='Arquivo importado e armazenado: <b>'+file.name+'</b> | Linhas: <b>'+mapped.length+'</b>';$('csvFaturamento').value='';render()};reader.readAsText(file,'UTF-8')}
+function importRecurso(){let file=$('csvRecurso').files[0];if(!file)return alert('Anexe o CSV de recurso.');let op=$('recImpOperadora').value||'Não informado',un=$('recImpUnidade').value||'Não informada',comp=$('recImpCompetencia').value,ref=$('recImpReferencia').value||comp,unObj=unidades.find(x=>x.nome===un)||{};if(!comp)return alert('Informe a competência.');let reader=new FileReader();reader.onload=e=>{let rows=parseCSV(e.target.result),impId=Date.now(),mapped=rows.map(r=>{let cod=col(r,['COD PRESTADOR']),opByCod=operadoras.find(o=>String(o.codigo||'').trim()===String(cod||'').trim()),sit=col(r,['SITUAÇÃO DO RECURSO','SITUACAO DO RECURSO']),status=norm(sit).includes('requer')?'Requer Ação':(norm(sit).includes('encerrado')?'Encerrado (Enviado para Pagamento)':'Em Análise');return{importId:impId,tipo:'recurso',operadora:opByCod?opByCod.nome:op,unidade:un,cnpj:unObj.cnpj||'',competencia:comp,referencia:ref,beneficiario:col(r,['BENEFICIÁRIO','BENEFICIARIO']),dataAtendimento:dateISO(col(r,['DATA ATENDIMENTO'])),especialidade:espec(col(r,['DESCRIÇÃO SERVIÇO','DESCRICAO SERVICO'])),valorInformado:0,valorGlosa:br(col(r,['VALOR GLOSADO ORIGEM'])),valorRecursado:br(col(r,['VALOR RECURSADO'])),valorPagoRecurso:br(col(r,['VALOR PAGO RECURSO'])),statusRecurso:status,dataAberturaRecurso:dateISO(col(r,['DATA DE ABERTURA DO RECURSO'])),dataPagamentoRecurso:dateISO(col(r,['DATA PAGAMENTO RECURSO'])),dataAnalise1:'',dataAnalise2:'',dataAnalise3:'',dataEnvioLote:'',dataPagamentoFaturamento:''}});dados=dados.concat(mapped);importacoes.unshift({id:impId,data:new Date().toLocaleString('pt-BR'),tipo:'Extrato de Recurso de Glosa',operadora:op,competencia:comp,referencia:ref,unidade:un,arquivo:file.name,linhas:mapped.length});$('statusRec').innerHTML='Extrato importado e armazenado: <b>'+file.name+'</b> | Linhas: <b>'+mapped.length+'</b>';$('csvRecurso').value='';render()};reader.readAsText(file,'UTF-8')}
+function salvarRec(){let un=$('recUnidade').value||'Não informada',unObj=unidades.find(x=>x.nome===un)||{},gl=br($('recGlosado').value);dados.push({importId:'manual-'+Date.now(),tipo:'recurso',operadora:$('recOperadora').value||'Não informado',unidade:un,cnpj:unObj.cnpj||'',competencia:$('recReferencia').value,referencia:$('recReferencia').value,beneficiario:'',dataAtendimento:'',especialidade:$('recEspecialidade').value||'Outras',valorInformado:0,valorGlosa:gl,valorRecursado:br($('recRecursado').value),valorPagoRecurso:br($('recPago').value),statusRecurso:$('recStatus').value,dataAberturaRecurso:$('recDataAbertura').value,dataPagamentoRecurso:$('recDataPagamento').value,dataAnalise1:$('recDataAnalise1').value,dataAnalise2:$('recDataAnalise2').value,dataAnalise3:$('recDataAnalise3').value,dataEnvioLote:'',dataPagamentoFaturamento:''});render()}
+function addUnidade(){let nome=$('unNome').value.trim();if(!nome)return alert('Informe a unidade');unidades.push({id:Date.now(),nome,cnpj:$('unCnpj').value,cidade:$('unCidade').value,uf:$('unUf').value});['unNome','unCnpj','unCidade','unUf'].forEach(id=>$(id).value='');render()}
+function addOperadora(){let nome=$('opNome').value.trim();if(!nome)return alert('Informe a operadora');operadoras.push({id:Date.now(),nome,codigo:$('opCodigo').value,prazoFat:Number($('opPrazoFat').value||0),unidade:$('opUnidade').value||'Todas'});['opNome','opCodigo','opPrazoFat'].forEach(id=>$(id).value='');$('opUnidade').value='';render()}
+function modeloFat(){download('DATA ENVIO LOTE;BENEFICIÁRIO;DATA REALIZAÇÃO;DESCRIÇÃO;VALOR INFORMADO;VALOR LIBERADO;VALOR DA GLOSA\n10/05/2026;Paciente exemplo;08/05/2026;Psicologia - Atendimento ABA;1500,00;1350,00;150,00\n10/05/2026;Paciente exemplo;08/05/2026;Fonoaudiologia;900,00;900,00;0,00\n','modelo_faturamento_glosa.csv')}
+function modeloRec(){download('COD PRESTADOR;REFERÊNCIA ORIGEM;DATA DE ABERTURA DO RECURSO;SITUAÇÃO DO RECURSO;BENEFICIÁRIO;DATA ATENDIMENTO;DESCRIÇÃO SERVIÇO;VALOR GLOSADO ORIGEM;VALOR RECURSADO;VALOR PAGO RECURSO;DATA PAGAMENTO RECURSO\n12345;05/2026;15/05/2026;Requer ação do Credenciado;Paciente exemplo;08/05/2026;Psicologia - Atendimento ABA;150,00;150,00;0,00;\n12345;05/2026;15/05/2026;Encerrado (Enviado para Pagamento);Paciente exemplo;08/05/2026;Fonoaudiologia;100,00;100,00;100,00;30/06/2026\n','modelo_valor_recuperado_glosa.csv')}
+function download(csv,name){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=name;a.click()}
+function exportCSV(){let a=filtered(),lines=['Tipo;Operadora;Unidade;Competencia;Referencia;Especialidade;Valor Informado;Valor Glosa;Valor Liberado;Valor Recursado;Valor Pago Recurso;Status Recurso'];a.forEach(x=>lines.push([x.tipo,x.operadora,x.unidade,x.competencia,x.referencia,x.especialidade,x.valorInformado.toFixed(2),x.valorGlosa.toFixed(2),Math.max(0,x.valorInformado-x.valorGlosa).toFixed(2),x.valorRecursado.toFixed(2),x.valorPagoRecurso.toFixed(2),x.statusRecurso].join(';')));download(lines.join('\n'),'executive_view_analise.csv')}
+function deleteImport(id){if(!isDiretor())return alert('Apenas usuários Diretores podem excluir arquivos.');if(!confirm('Excluir esta importação e seus dados vinculados?'))return;dados=dados.filter(x=>String(x.importId)!==String(id));importacoes=importacoes.filter(x=>String(x.id)!==String(id));pagamentos=pagamentos.filter(x=>String(x.importId)!==String(id));render()}
+function bind(){document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));$(btn.dataset.tab).classList.add('active');btn.classList.add('active');setTimeout(()=>{Object.values(charts).forEach(c=>c&&c.resize&&c.resize());},100)}));['perfilUsuario','fOperadora','fUnidade','fEspecialidade','fCompetencia','fReferencia','fTipo','fStatusRecurso'].forEach(id=>$(id).addEventListener('change',render));$('btnImportarFat').addEventListener('click',importFaturamento);$('btnImportarRec').addEventListener('click',importRecurso);$('btnModeloFat').addEventListener('click',modeloFat);$('btnModeloRec').addEventListener('click',modeloRec);$('btnExportar').addEventListener('click',exportCSV);$('btnLimparFiltros').addEventListener('click',()=>{['fOperadora','fUnidade','fEspecialidade','fCompetencia','fReferencia','fTipo','fStatusRecurso'].forEach(id=>$(id).value='');render()});$('btnSalvarRec').addEventListener('click',salvarRec);$('btnAddUnidade').addEventListener('click',addUnidade);$('btnAddOperadora').addEventListener('click',addOperadora);document.body.addEventListener('change',ev=>{let id=ev.target.getAttribute('data-pay-date');if(id){let p=pagamentos.find(x=>String(x.id)===String(id));if(p){p.dataPagamento=parseDateAny(ev.target.value);dados.filter(d=>String(d.importId)===String(p.importId)).forEach(d=>d.dataPagamentoFaturamento=p.dataPagamento);render()}}});document.body.addEventListener('click',ev=>{let imp=ev.target.getAttribute('data-del-imp'),un=ev.target.getAttribute('data-del-un'),op=ev.target.getAttribute('data-del-op');if(imp)deleteImport(imp);if(un){if(!isDiretor())return alert('Apenas Diretores podem excluir.');unidades=unidades.filter(x=>String(x.id)!==String(un));render()}if(op){if(!isDiretor())return alert('Apenas Diretores podem excluir.');operadoras=operadoras.filter(x=>String(x.id)!==String(op));render()}})}
+load();bind();render();
+
+
+
+
+
+
+
+document.addEventListener('click',function(e){
+  if(e.target && e.target.id==='btnSimularLoginFase2'){
+    const email=(document.getElementById('loginEmail')||{}).value || '';
+    const perfil=(document.getElementById('loginPerfil')||{}).value || 'Diretoria';
+    const status=(document.getElementById('loginStatus')||{}).value || 'Ativo';
+    const msg=document.getElementById('loginMsgFase2');
+    if(msg){
+      msg.innerHTML = status==='Inativo'
+        ? 'Acesso bloqueado para <b>'+email+'</b>. Motivo: usuário inativo.'
+        : 'Acesso simulado para <b>'+email+'</b> com perfil <b>'+perfil+'</b>.';
+    }
+  }
+  if(e.target && e.target.id==='btnResetSenhaFase2'){
+    const email=(document.getElementById('loginEmail')||{}).value || '';
+    const msg=document.getElementById('loginMsgFase2');
+    if(msg) msg.innerHTML='Solicitação de redefinição de senha registrada para <b>'+email+'</b>.';
+  }
+  if(e.target && e.target.id==='btnAddUsuarioFase2'){
+    const nome=(document.getElementById('userNome')||{}).value || '';
+    const email=(document.getElementById('userEmail')||{}).value || '';
+    if(!nome || !email){ alert('Informe nome e e-mail do usuário.'); return; }
+    usuariosFase2.push({
+      nome:nome,
+      email:email,
+      perfil:(document.getElementById('userPerfil')||{}).value || 'Diretoria',
+      unidade:(document.getElementById('userUnidade')||{}).value || 'Todas',
+      status:(document.getElementById('userStatus')||{}).value || 'Ativo'
+    });
+    document.getElementById('userNome').value='';
+    document.getElementById('userEmail').value='';
+    renderUsuariosFase2();
+  }
+});
+
+
+
+})();
+</script>
+</body>
+</html>
