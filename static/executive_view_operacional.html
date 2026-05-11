@@ -22,6 +22,53 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:10px;bord
 .notice{background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.35);color:#fed7aa;border-radius:14px;padding:13px;font-size:13px}.code{background:#070a0f;border:1px solid var(--line);border-radius:14px;padding:14px;color:#d1d5db;font-family:Consolas,monospace;font-size:12px;white-space:pre-wrap}
 canvas{max-height:260px}.chart-tall{height:360px;max-height:360px!important}.chart-mini{height:230px;max-height:230px!important}@media(max-width:1200px){.grid-2,.grid-4,.grid-5,.form-grid,.filters{grid-template-columns:1fr}}
 </style>
+
+<script>
+(function(){
+  const SYNC_KEYS=["cc4_dados","cc4_importacoes","cc4_pagamentos","cc4_unidades","cc4_operadoras"];
+  let applyingRemote=false, timer=null;
+  function getState(){
+    const d={};
+    SYNC_KEYS.forEach(k=>{try{d[k]=localStorage.getItem(k)||"[]"}catch(e){d[k]="[]"}});
+    return d;
+  }
+  function applyState(payload){
+    if(!payload||!payload.data)return false;
+    const before=JSON.stringify(getState());
+    applyingRemote=true;
+    SYNC_KEYS.forEach(k=>{if(payload.data[k]!==undefined&&payload.data[k]!==null)localStorage.setItem(k,payload.data[k]);});
+    if(payload.version!==undefined)localStorage.setItem("cc4_server_version",String(payload.version));
+    applyingRemote=false;
+    return before!==JSON.stringify(getState());
+  }
+  function saveState(){
+    if(applyingRemote)return;
+    fetch("/api/state",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:getState()})})
+    .then(r=>r.json()).then(p=>{if(p.version!==undefined)localStorage.setItem("cc4_server_version",String(p.version));})
+    .catch(e=>console.warn("Falha ao salvar no servidor",e));
+  }
+  try{
+    const xhr=new XMLHttpRequest();
+    xhr.open("GET","/api/state?t="+Date.now(),false);
+    xhr.send(null);
+    if(xhr.status===200)applyState(JSON.parse(xhr.responseText));
+  }catch(e){console.warn("Falha ao carregar dados centrais",e);}
+  const originalSetItem=localStorage.setItem.bind(localStorage);
+  localStorage.setItem=function(k,v){
+    originalSetItem(k,v);
+    if(SYNC_KEYS.includes(k)&&!applyingRemote){clearTimeout(timer);timer=setTimeout(saveState,400);}
+  };
+  setInterval(function(){
+    fetch("/api/state?t="+Date.now(),{cache:"no-store"}).then(r=>r.json()).then(p=>{
+      const current=localStorage.getItem("cc4_server_version")||"0";
+      const server=String(p.version||"0");
+      if(server!==current){const changed=applyState(p); if(changed) location.reload();}
+    }).catch(e=>console.warn("Falha ao sincronizar",e));
+  },15000);
+  window.executiveViewSync={salvar:saveState,carregar:function(){location.reload();}};
+})();
+</script>
+
 </head>
 <body>
 <header><div class="brand"><div class="logo">CC</div><div><h1>Executive View | Dashboard Operacional</h1></div></div><div style="min-width:260px"><label>Perfil de acesso</label><select id="perfilUsuario"><option>Diretor</option><option>Financeiro</option><option>Coordenação</option><option>Operacional</option><option>Auditoria</option></select></div></header>
